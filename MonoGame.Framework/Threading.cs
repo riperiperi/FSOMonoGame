@@ -195,7 +195,19 @@ namespace Microsoft.Xna.Framework
             lock (BackgroundContext)
             {
                 // Make the context current on this thread
-                BackgroundContext.MakeCurrent(WindowInfo);
+                bool success = false;
+                while (!success) {
+                    try {
+                        BackgroundContext.MakeCurrent(WindowInfo);
+                        success = true;
+                    }
+                    catch (GraphicsContextException ex)
+                    {
+                        //hack to circumvent a mystery error where the gc thread fails to capture the gfx context.
+                        Console.WriteLine("Failed to get context. Trying again...");
+                        Thread.Sleep(1000);
+                    }
+                }
                 // Execute the action
                 action();
                 // Must flush the GL calls so the texture is ready for the main context to use
