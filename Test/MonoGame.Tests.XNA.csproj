@@ -106,11 +106,13 @@
     <Compile Include="Framework\CurveTest.cs" />
     <Compile Include="Framework\EnumConformingTest.cs" />
     <Compile Include="Framework\GamePadStateTest.cs" />
+    <Compile Include="Framework\GamePadThumbSticksTest.cs" />
     <Compile Include="Framework\MatrixTest.cs" />
     <Compile Include="Framework\PackedVectorTest.cs" />
     <Compile Include="Framework\PlaneTest.cs" />
     <Compile Include="Framework\QuaternionTest.cs" />
     <Compile Include="Framework\RectangleTest.cs" />
+    <Compile Include="Framework\SpriteFontNonVisualTest.cs" />
     <Compile Include="Framework\Vector2Test.cs" />
     <Compile Include="Framework\Vector3Test.cs" />
     <Compile Include="Framework\Vector4Test.cs" />
@@ -153,6 +155,7 @@
     <Compile Include="Framework\Visual\SpriteFontTest.cs" />
     <Compile Include="Framework\Components\UpdateGuard.cs" />
     <Compile Include="Framework\Visual\ViewportTest.cs" />
+    <Compile Include="Framework\Visual\OcclusionQueryTest.cs" />
     <Compile Include="Framework\Visual\VisualTestFixtureBase.cs" />
     <Compile Include="Framework\Visual\VisualTestGame.cs" />
     <Compile Include="Runner\Windows\Program.cs" />
@@ -206,6 +209,9 @@
     <Content Include="Assets\Effects\CustomSpriteBatchEffect.fx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Assets\Effects\Instancing.fx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Assets\Effects\ParserTest.fx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -225,6 +231,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\ReferenceImages\DepthStencilState\VisualTestStencilBuffer.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\ReferenceImages\GraphicsDevice\DrawInstancedPrimitivesVisualTest.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\ReferenceImages\GraphicsDevice\VertexTextureVisualTest.png">
@@ -662,11 +671,31 @@
     <Content Include="Assets\Xml\26_ChildCollections.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Assets\Xml\27_Colors.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\Xml\19_FontDescription.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Assets\Fonts\JingJing.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Fonts\Lindsey.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Fonts\Motorwerk.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Fonts\QuartzMS.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Fonts\SegoeKeycaps.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
