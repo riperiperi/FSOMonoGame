@@ -160,8 +160,11 @@ namespace Microsoft.Xna.Framework.Audio
             {
                 OggStreamer.Instance.RemoveStream(this);
 
-                if (state != ALSourceState.Initial)
-                    Empty(); // force the queued buffers to be unqueued to avoid issues on Mac
+                lock (prepareMutex)
+                {
+                    if (state != ALSourceState.Initial)
+                        Empty(); // force the queued buffers to be unqueued to avoid issues on Mac
+                }
             }
             AL.Source(alSourceId, ALSourcei.Buffer, 0);
             ALHelper.CheckError("Failed to free source from buffers.");
@@ -402,10 +405,8 @@ namespace Microsoft.Xna.Framework.Audio
         public bool FillBuffer(OggStream stream, int bufferId)
         {
             int readSamples;
-            long readerPosition = 0;
             lock (readMutex)
             {
-                readerPosition = stream.Reader.DecodedPosition;
                 readSamples = stream.Reader.ReadSamples(readSampleBuffer, 0, BufferSize);
                 CastBuffer(readSampleBuffer, castBuffer, readSamples);
             }

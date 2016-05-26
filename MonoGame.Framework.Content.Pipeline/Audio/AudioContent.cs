@@ -27,44 +27,86 @@ namespace Microsoft.Xna.Framework.Content.Pipeline.Audio
         /// Gets the raw audio data.
         /// </summary>
         /// <value>If unprocessed, the source data; otherwise, the processed data.</value>
-        public ReadOnlyCollection<byte> Data { get { return data.AsReadOnly(); } }
+        public ReadOnlyCollection<byte> Data
+        {
+            get
+            {
+                return data.AsReadOnly();
+            }
+        }
 
         /// <summary>
         /// Gets the duration (in milliseconds) of the audio data.
         /// </summary>
         /// <value>Duration of the audio data.</value>
-        public TimeSpan Duration { get { return duration; } }
+        public TimeSpan Duration
+        {
+            get
+            {
+                return duration;
+            }
+        }
 
         /// <summary>
         /// Gets the file name containing the audio data.
         /// </summary>
         /// <value>The name of the file containing this data.</value>
         [ContentSerializerAttribute]
-        public string FileName { get { return fileName; } }
+        public string FileName
+        {
+            get
+            {
+                return fileName;
+            }
+        }
 
         /// <summary>
         /// Gets the AudioFileType of this audio source.
         /// </summary>
         /// <value>The AudioFileType of this audio source.</value>
-        public AudioFileType FileType { get { return fileType; } }
+        public AudioFileType FileType
+        {
+            get
+            {
+                return fileType;
+            }
+        }
 
         /// <summary>
         /// Gets the AudioFormat of this audio source.
         /// </summary>
         /// <value>The AudioFormat of this audio source.</value>
-        public AudioFormat Format { get { return format; } }
+        public AudioFormat Format
+        {
+            get
+            {
+                return format;
+            }
+        }
 
         /// <summary>
         /// Gets the loop length, in samples.
         /// </summary>
         /// <value>The number of samples in the loop.</value>
-        public int LoopLength { get { return loopLength; } }
+        public int LoopLength
+        {
+            get
+            {
+                return loopLength;
+            }
+        }
 
         /// <summary>
         /// Gets the loop start, in samples.
         /// </summary>
         /// <value>The number of samples to the start of the loop.</value>
-        public int LoopStart { get { return loopStart; } }
+        public int LoopStart
+        {
+            get
+            {
+                return loopStart;
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of AudioContent.
@@ -123,7 +165,7 @@ namespace Microsoft.Xna.Framework.Content.Pipeline.Audio
         /// the audio is stored external to the XNB file.  If this is null, then the converted audio is stored in
         /// the Data property.
         /// </param>
-        public void ConvertFormat(ConversionFormat formatType, ConversionQuality quality, string saveToFile)
+        public ConversionQuality ConvertFormat(ConversionFormat formatType, ConversionQuality quality, string saveToFile)
         {
             var temporarySource = Path.GetTempFileName();
             var temporaryOutput = Path.GetTempFileName();
@@ -148,7 +190,7 @@ namespace Microsoft.Xna.Framework.Content.Pipeline.Audio
                     case ConversionFormat.Pcm:
                         // PCM signed 16-bit little-endian
                         ffmpegCodecName = "pcm_s16le";
-                        ffmpegMuxerName = "s16le";
+                        ffmpegMuxerName = "wav";
                         format = 0x0001; /* WAVE_FORMAT_PCM */
                         break;
                     case ConversionFormat.WindowsMedia:
@@ -185,17 +227,25 @@ namespace Microsoft.Xna.Framework.Content.Pipeline.Audio
                 }
 
                 string ffmpegStdout, ffmpegStderr;
-                var ffmpegExitCode = ExternalTool.Run(
-                    "ffmpeg",
-                    string.Format(
-                        "-y -i \"{0}\" -vn -c:a {1} -b:a {2} -f:a {3} -strict experimental \"{4}\"",
-                        temporarySource,
-                        ffmpegCodecName,
-                        QualityToBitRate(quality),
-                        ffmpegMuxerName,
-                        temporaryOutput),
-                    out ffmpegStdout,
-                    out ffmpegStderr);
+                int ffmpegExitCode = 0;
+                do
+                {
+                    ffmpegExitCode = ExternalTool.Run(
+                        "ffmpeg",
+                        string.Format(
+                            "-y -i \"{0}\" -vn -c:a {1} -b:a {2} -f:a {3} -strict experimental \"{4}\"",
+                            temporarySource,
+                            ffmpegCodecName,
+                            QualityToBitRate(quality),
+                            ffmpegMuxerName,
+                            temporaryOutput),
+                        out ffmpegStdout,
+                        out ffmpegStderr);
+                    if (ffmpegExitCode != 0)
+                    {
+                        quality--;
+                    }
+                } while (quality >= 0 && ffmpegExitCode!=0);
                 if (ffmpegExitCode != 0)
                 {
                     throw new InvalidOperationException("ffmpeg exited with non-zero exit code: \n" + ffmpegStdout + "\n" + ffmpegStderr);
@@ -222,10 +272,11 @@ namespace Microsoft.Xna.Framework.Content.Pipeline.Audio
                     this.data = rawData.ToList();
                 }
 
+                // Get the audio metadata from the output file
                 string ffprobeStdout, ffprobeStderr;
                 var ffprobeExitCode = ExternalTool.Run(
                     "ffprobe",
-                    string.Format("-i \"{0}\" -show_entries streams -v quiet -of flat", temporarySource),
+                    string.Format("-i \"{0}\" -show_entries streams -v quiet -of flat", temporaryOutput),
                     out ffprobeStdout,
                     out ffprobeStderr);
                 if (ffprobeExitCode != 0)
@@ -269,19 +320,24 @@ namespace Microsoft.Xna.Framework.Content.Pipeline.Audio
                 // Calculate blockAlign.
                 switch (formatType)
                 {
+                    case ConversionFormat.Adpcm:
+                    case ConversionFormat.ImaAdpcm:
                     case ConversionFormat.Pcm:
                         // Block alignment value is the number of bytes in an atomic unit (that is, a block) of audio for a particular format. For Pulse Code Modulation (PCM) formats, the formula for calculating block alignment is as follows: 
                         //  •   Block Alignment = Bytes per Sample x Number of Channels
                         // For example, the block alignment value for 16-bit PCM format mono audio is 2 (2 bytes per sample x 1 channel). For 16-bit PCM format stereo audio, the block alignment value is 4.
                         // https://msdn.microsoft.com/en-us/library/system.speech.audioformat.speechaudioformatinfo.blockalign(v=vs.110).aspx
-                        blockAlign = (bitsPerSample / 8) * channelCount;
+                        // Get the raw PCM from the output WAV file
+                        using (var reader = new BinaryReader(new MemoryStream(rawData)))
+                        {
+                            data = GetRawWavData(reader, ref blockAlign).ToList();
+                        }
                         break;
                     default:
                         // blockAlign is not available from ffprobe (and may or may not
                         // be relevant for non-PCM formats anyway)
                         break;
                 }
-
 
                 this.duration = TimeSpan.FromSeconds(durationInSeconds);
                 this.format = new AudioFormat(
@@ -304,6 +360,7 @@ namespace Microsoft.Xna.Framework.Content.Pipeline.Audio
                 File.Delete(temporarySource);
                 File.Delete(temporaryOutput);
             }
+            return quality;
         }
 
         private void Read(string filename)
@@ -316,5 +373,66 @@ namespace Microsoft.Xna.Framework.Content.Pipeline.Audio
                 this.data = data.ToList();
             }
         }
-	}
+
+        // Borrowed from AudioLoader to get the raw data from the WAV
+        private static byte[] GetRawWavData(BinaryReader reader, ref int blockAlign)
+        {
+            byte[] audioData;
+
+            //header
+            string signature = new string(reader.ReadChars(4));
+            if (signature != "RIFF")
+            {
+                throw new NotSupportedException("Specified stream is not a wave file.");
+            }
+
+            reader.ReadInt32(); // riff_chunck_size
+
+            string wformat = new string(reader.ReadChars(4));
+            if (wformat != "WAVE")
+            {
+                throw new NotSupportedException("Specified stream is not a wave file.");
+            }
+
+            // WAVE header
+            string format_signature = new string(reader.ReadChars(4));
+            while (format_signature != "fmt ")
+            {
+                reader.ReadBytes(reader.ReadInt32());
+                format_signature = new string(reader.ReadChars(4));
+            }
+
+            int format_chunk_size = reader.ReadInt32();
+
+            // total bytes read: tbp
+            int audio_format = reader.ReadInt16(); // 2
+            int num_channels = reader.ReadInt16(); // 4
+            int sample_rate = reader.ReadInt32();  // 8
+            reader.ReadInt32();    // 12, byte_rate
+            blockAlign = reader.ReadInt16();  // 14, block_align
+            int bits_per_sample = reader.ReadInt16(); // 16
+
+            // reads residual bytes
+            if (format_chunk_size > 16)
+                reader.ReadBytes(format_chunk_size - 16);
+
+            string data_signature = new string(reader.ReadChars(4));
+
+            while (data_signature.ToLowerInvariant() != "data")
+            {
+                reader.ReadBytes(reader.ReadInt32());
+                data_signature = new string(reader.ReadChars(4));
+            }
+
+            if (data_signature != "data")
+            {
+                throw new NotSupportedException("Specified wave file is not supported.");
+            }
+
+            int data_chunk_size = reader.ReadInt32();
+            audioData = reader.ReadBytes(data_chunk_size);
+
+            return audioData;
+        }
+    }
 }

@@ -3,13 +3,8 @@
 // file 'LICENSE.txt', which is part of this source code package.
 
 using System;
-using System.Diagnostics;
-#if WINDOWS
-using System.Windows.Forms;
-#endif
-#if MONOMAC
-using Gtk;
-#endif
+using Eto;
+using Eto.Forms;
 
 namespace MonoGame.Tools.Pipeline
 {
@@ -19,46 +14,27 @@ namespace MonoGame.Tools.Pipeline
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main(string [] args)
+        static void Main(string[] args)
         {
-#if WINDOWS
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
+            var platform = Platform.Detect;
 
-            PipelineSettings.Default.Load();
+            var app = new Application(platform);
+            Styles.Load();
 
-			var view = new MainView();
-            if (args != null && args.Length > 0)
-            {
-                var projectFilePath = string.Join(" ", args);
-                view.OpenProjectPath = projectFilePath;
-            }
+            var win = new MainWindow();
+            var controller = PipelineController.Create(win);
 
-            var controller = new PipelineController(view);
-            Application.Run(view);
-#endif
-#if LINUX || MONOMAC
+            string project = null;
 
-			Gtk.Application.Init ();
-            Global.Initalize ();
-			MainWindow win = new MainWindow ();
-			win.Show (); 
-			new PipelineController(win);
-			#if LINUX
-			if (args != null && args.Length > 0)
-			{
-				var projectFilePath = string.Join(" ", args);
-				win.OpenProjectPath = projectFilePath;
-			}
-			#elif MONOMAC
-			var project = Environment.GetEnvironmentVariable("MONOGAME_PIPELINE_PROJECT");
-			if (!string.IsNullOrEmpty (project)) {
-				win.OpenProjectPath = project;
-			}
-			#endif
-			win.OnShowEvent ();
-			Gtk.Application.Run ();
-#endif
+            if (Global.Unix && !Global.Linux)
+                project = Environment.GetEnvironmentVariable("MONOGAME_PIPELINE_PROJECT");
+            else if (args != null && args.Length > 0)
+                project = string.Join(" ", args);
+
+            if (!string.IsNullOrEmpty(project))
+                controller.OpenProject(project);
+
+            app.Run(win);
         }
     }
 }

@@ -33,6 +33,8 @@ namespace Microsoft.Xna.Framework.Graphics
 		Vector2 _texCoordBR = new Vector2 (0,0);
         #endregion
 
+        internal static bool NeedsHalfPixelOffset;
+
         /// <summary>
         /// Constructs a <see cref="SpriteBatch"/>.
         /// </summary>
@@ -128,15 +130,19 @@ namespace Microsoft.Xna.Framework.Graphics
 			var vp = gd.Viewport;
 
 		    Matrix projection;
+
             // Normal 3D cameras look into the -z direction (z = 1 is in font of z = 0). The
             // sprite batch layer depth is the opposite (z = 0 is in front of z = 1).
             // --> We get the correct matrix with near plane 0 and far plane -1.
             Matrix.CreateOrthographicOffCenter(0, vp.Width, vp.Height, 0, 0, -1, out projection);
-#if !DIRECTX
-            // GL requires a half pixel offset to match DX.
-            projection.M41 += -0.5f * projection.M11;
-            projection.M42 += -0.5f * projection.M22;
-#endif
+
+            // Some platforms require a half pixel offset to match DX.
+            if (NeedsHalfPixelOffset)
+            {
+                projection.M41 += -0.5f * projection.M11;
+                projection.M42 += -0.5f * projection.M22;
+            }
+
             Matrix.Multiply(ref _matrix, ref projection, out projection);
 
             _matrixTransform.SetValue(projection);
@@ -377,20 +383,22 @@ namespace Microsoft.Xna.Framework.Graphics
                     break;
             }
 
-			if (sourceRectangle.HasValue) {
+			if (sourceRectangle.HasValue)
+            {
 				_tempRect = sourceRectangle.Value;
-			} else {
-				_tempRect.X = 0;
-				_tempRect.Y = 0;
-				_tempRect.Width = texture.Width;
-				_tempRect.Height = texture.Height;				
-			}
-			
-			_texCoordTL.X = _tempRect.X / (float)texture.Width;
-			_texCoordTL.Y = _tempRect.Y / (float)texture.Height;
-			_texCoordBR.X = (_tempRect.X + _tempRect.Width) / (float)texture.Width;
-			_texCoordBR.Y = (_tempRect.Y + _tempRect.Height) / (float)texture.Height;
-
+                _texCoordTL.X = _tempRect.X / (float)texture.Width;
+                _texCoordTL.Y = _tempRect.Y / (float)texture.Height;
+                _texCoordBR.X = (_tempRect.X + _tempRect.Width) / (float)texture.Width;
+                _texCoordBR.Y = (_tempRect.Y + _tempRect.Height) / (float)texture.Height;
+            }
+            else
+            {
+                _texCoordTL.X = 0f;
+                _texCoordTL.Y = 0f;
+                _texCoordBR.X = 1f;
+                _texCoordBR.Y = 1f;
+            }
+            
 			if ((effect & SpriteEffects.FlipVertically) != 0) {
                 var temp = _texCoordBR.Y;
 				_texCoordBR.Y = _texCoordTL.Y;

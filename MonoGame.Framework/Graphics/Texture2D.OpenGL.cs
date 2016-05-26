@@ -183,12 +183,12 @@ namespace Microsoft.Xna.Framework.Graphics
                     {
                         if (rect.HasValue)
                         {
-                            GL.CompressedTexSubImage2D(TextureTarget.Texture2D, level, x, y, w, h, glFormat, data.Length - startBytes, dataPtr);
+                            GL.CompressedTexSubImage2D(TextureTarget.Texture2D, level, x, y, w, h, glFormat, elementCount - startBytes, dataPtr);
                             GraphicsExtensions.CheckGLError();
                         }
                         else
                         {
-                            GL.CompressedTexImage2D(TextureTarget.Texture2D, level, glInternalFormat, w, h, 0, data.Length - startBytes, dataPtr);
+                            GL.CompressedTexImage2D(TextureTarget.Texture2D, level, glInternalFormat, w, h, 0, elementCount - startBytes, dataPtr);
                             GraphicsExtensions.CheckGLError();
                         }
                     }
@@ -515,7 +515,7 @@ namespace Microsoft.Xna.Framework.Graphics
 
         private void PlatformSaveAsJpeg(Stream stream, int width, int height)
         {
-#if MONOMAC || WINDOWS
+#if DESKTOPGL || MONOMAC
 			SaveAsImage(stream, width, height, ImageFormat.Jpeg);
 #elif ANDROID
             SaveAsImage(stream, width, height, Bitmap.CompressFormat.Jpeg);
@@ -526,18 +526,16 @@ namespace Microsoft.Xna.Framework.Graphics
 
         private void PlatformSaveAsPng(Stream stream, int width, int height)
         {
-#if MONOMAC || WINDOWS || IOS
-            var pngWriter = new PngWriter();
-            pngWriter.Write(this, stream);
-#elif ANDROID
+#if ANDROID
             SaveAsImage(stream, width, height, Bitmap.CompressFormat.Png);
 #else
-            throw new NotImplementedException();
+            var pngWriter = new PngWriter();
+            pngWriter.Write(this, stream);
 #endif
         }
 
-#if MONOMAC || WINDOWS
-		private void SaveAsImage(Stream stream, int width, int height, ImageFormat format)
+#if DESKTOPGL || MONOMAC
+        internal void SaveAsImage(Stream stream, int width, int height, ImageFormat format)
 		{
 			if (stream == null)
 			{
