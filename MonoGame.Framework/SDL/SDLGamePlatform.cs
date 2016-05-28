@@ -108,7 +108,6 @@ namespace Microsoft.Xna.Framework
         private void SdlRunLoop()
         {
             Sdl.Event ev;
-
             while (Sdl.PollEvent(out ev) == 1)
             {
                 if (ev.Type == Sdl.EventType.Quit)
@@ -141,6 +140,8 @@ namespace Microsoft.Xna.Framework
 
                     if (text.Length == 0)
                         continue;
+
+                    text = text.Substring(0, 1);
 
                     foreach (var c in text)
                         _view.CallTextInput(c);
