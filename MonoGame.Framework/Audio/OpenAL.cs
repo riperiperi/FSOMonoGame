@@ -544,10 +544,14 @@ namespace OpenAL
         private delegate void alAuxiliaryEffectSlotiDelegate (uint slot, EfxEffecti type, uint effect);
 
         /* Filter API */
-        private unsafe delegate void alGenFiltersDelegate (int n, [Out] uint* filters);
-        private delegate void alFilteriDelegate (uint fid, EfxFilteri param, int value);
-        private delegate void alFilterfDelegate (uint fid, EfxFilterf param, float value);
-        private unsafe delegate void alDeleteFiltersDelegate (int n, [In] uint* filters);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private unsafe delegate void alGenFiltersDelegate(int n, [Out] uint* filters);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void alFilteriDelegate(uint fid, EfxFilteri param, int value);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void alFilterfDelegate(uint fid, EfxFilterf param, float value);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private unsafe delegate void alDeleteFiltersDelegate(int n, [In] uint* filters);
 
 
         private alGenEffectsDelegate alGenEffects;
