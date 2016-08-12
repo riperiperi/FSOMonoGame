@@ -6,8 +6,15 @@ using System;
 using System.Collections.Generic;
 #if MONOMAC && PLATFORM_MACOS_LEGACY
 using MonoMac.OpenAL;
-#elif OPENAL
+#endif
+#if MONOMAC && !PLATFORM_MACOS_LEGACY
 using OpenTK.Audio.OpenAL;
+#endif
+#if GLES
+using OpenTK.Audio.OpenAL;
+#endif
+#if DESKTOPGL
+using OpenAL;
 #endif
 
 namespace Microsoft.Xna.Framework.Audio
@@ -36,8 +43,11 @@ namespace Microsoft.Xna.Framework.Audio
         private void PlatformPlay()
         {
             AL.GetError();
-            AL.Source(SourceId, ALSourceb.Looping, IsLooped);
+
+            // Ensure that the source is not looped (due to source recycling)
+            AL.Source(SourceId, ALSourceb.Looping, false);
             ALHelper.CheckError("Failed to set source loop state.");
+
             AL.SourcePlay(SourceId);
             ALHelper.CheckError("Failed to play the source.");
         }
@@ -63,7 +73,7 @@ namespace Microsoft.Xna.Framework.Audio
             ALHelper.CheckError("Failed to stop the source.");
 
             // Remove all queued buffers
-            AL.BindBufferToSource(SourceId, 0);
+            AL.Source(SourceId, ALSourcei.Buffer, 0);
             while (_queuedBuffers.Count > 0)
             {
                 var buffer = _queuedBuffers.Dequeue();
@@ -94,8 +104,10 @@ namespace Microsoft.Xna.Framework.Audio
             ALHelper.CheckError();
             _queuedBuffers.Enqueue(oalBuffer);
 
+
             // If the source has run out of buffers, restart it
-            if (_state == SoundState.Playing)
+            var sourceState = AL.GetSourceState(SourceId);
+            if (_state == SoundState.Playing && sourceState == ALSourceState.Stopped)
             {
                 AL.SourcePlay(SourceId);
                 ALHelper.CheckError("Failed to resume source playback.");
@@ -109,7 +121,7 @@ namespace Microsoft.Xna.Framework.Audio
             if (AL.IsSource(SourceId))
             {
                 AL.SourceStop(SourceId);
-                AL.BindBufferToSource(SourceId, 0);
+                AL.Source(SourceId, ALSourcei.Buffer, 0);
                 ALHelper.CheckError("Failed to stop the source.");
                 controller.RecycleSource(SourceId);
             }

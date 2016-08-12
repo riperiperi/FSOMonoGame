@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Utilities;
@@ -84,17 +85,9 @@ namespace Microsoft.Xna.Framework
 
         public override void BeforeInitialize ()
         {
-            var events = new Sdl.Event[1];
-            Sdl.PumpEvents ();
-            while (Sdl.PeepEvents(events, 1, Sdl.EventAction.GetEvent, Sdl.EventType.ControllerDeviceAdded, Sdl.EventType.ControllerDeviceAdded) == 1)
-            {
-                GamePad.AddDevice(events[0].ControllerDevice.Which);
-            }
-            while (Sdl.PeepEvents(events, 1, Sdl.EventAction.GetEvent, Sdl.EventType.JoyDeviceAdded, Sdl.EventType.JoyDeviceAdded) == 1)
-            {
-                Joystick.AddDevice(events[0].JoystickDevice.Which);
-            }
+            GamePad.InitDatabase();
             _view.CreateWindow();
+            SdlRunLoop();
 
             base.BeforeInitialize ();
         }
@@ -122,6 +115,7 @@ namespace Microsoft.Xna.Framework
         private void SdlRunLoop()
         {
             Sdl.Event ev;
+
             while (Sdl.PollEvent(out ev) == 1)
             {
                 if (ev.Type == Sdl.EventType.Quit)
@@ -134,11 +128,13 @@ namespace Microsoft.Xna.Framework
                     Joystick.RemoveDevice(ev.JoystickDevice.Which);                
                 else if (ev.Type == Sdl.EventType.MouseWheel)
                     Mouse.ScrollY += ev.Wheel.Y * 120;
-                else if (ev.Type == Sdl.EventType.KeyDown)
-                {
-                    var key = KeyboardUtil.ToXna(ev.Key.Keysym.Sym);
-                    if (!_keys.Contains(key))
-                        _keys.Add(key);
+                else if (ev.Type == Sdl.EventType.KeyDown) {
+                    var key = KeyboardUtil.ToXna (ev.Key.Keysym.Sym);
+                    if (!_keys.Contains (key))
+                        _keys.Add (key);
+                    char character = (char)ev.Key.Keysym.Sym;
+                    if (char.IsControl (character))
+                        _view.CallTextInput (character, key);
                 }
                 else if (ev.Type == Sdl.EventType.KeyUp)
                 {
@@ -147,19 +143,24 @@ namespace Microsoft.Xna.Framework
                 }
                 else if (ev.Type == Sdl.EventType.TextInput)
                 {
-                    string text;
+                    int len = 0;
+                    string text = String.Empty;
                     unsafe
                     {
-                        text = new string((char*)ev.Text.Text);
+                        while (Marshal.ReadByte ((IntPtr)ev.Text.Text, len) != 0) {
+                            len++;
+                        }
+                        var buffer = new byte [len];
+                        Marshal.Copy ((IntPtr)ev.Text.Text, buffer, 0, len);
+                        text = System.Text.Encoding.UTF8.GetString (buffer);
                     }
-
                     if (text.Length == 0)
                         continue;
-
-                    text = text.Substring(0, 1);
-
                     foreach (var c in text)
-                        _view.CallTextInput(c);
+                    {
+                        var key = KeyboardUtil.ToXna((int)c);
+                        _view.CallTextInput(c, key);
+                    }
                 }
                 else if (ev.Type == Sdl.EventType.WindowEvent)
                 {

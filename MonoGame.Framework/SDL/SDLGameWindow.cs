@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace Microsoft.Xna.Framework
 {
@@ -83,7 +84,7 @@ namespace Microsoft.Xna.Framework
         internal readonly Game _game;
         private IntPtr _handle;
         private bool _init, _disposed;
-        private bool _resizable, _borderless, _willBeFullScreen, _mouseVisible;
+        private bool _resizable, _borderless, _willBeFullScreen, _mouseVisible, _hardwareSwitch;
         private string _screenDeviceName;
         private int _winx, _winy, _width, _height;
 
@@ -126,7 +127,7 @@ namespace Microsoft.Xna.Framework
                 initflags |= Sdl.Window.State.Resizable;
 
             if (_borderless)
-                initflags |= Sdl.Window.State.Boderless;
+                initflags |= Sdl.Window.State.Borderless;
 
             Sdl.Window.Destroy(_handle);
 
@@ -165,6 +166,7 @@ namespace Microsoft.Xna.Framework
                 _width, _height, initflags);
 
             Sdl.SetHint("SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS", "0");
+            Sdl.SetHint("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS", "1");
 
             Sdl.Window.SetTitle(Handle, title);
 
@@ -241,10 +243,11 @@ namespace Microsoft.Xna.Framework
             Sdl.Rectangle displayRect;
             Sdl.Display.GetBounds(displayIndex, out displayRect);
 
-            if (_willBeFullScreen != IsFullScreen)
+            if (_willBeFullScreen != IsFullScreen || _hardwareSwitch != _game.graphicsDeviceManager.HardwareModeSwitch)
             {
                 var fullscreenFlag = _game.graphicsDeviceManager.HardwareModeSwitch ? Sdl.Window.State.Fullscreen : Sdl.Window.State.FullscreenDesktop;
                 Sdl.Window.SetFullscreen(Handle, (_willBeFullScreen) ? fullscreenFlag : 0);
+                _hardwareSwitch = _game.graphicsDeviceManager.HardwareModeSwitch;
             }
 
             if (!_willBeFullScreen || _game.graphicsDeviceManager.HardwareModeSwitch)
@@ -302,9 +305,9 @@ namespace Microsoft.Xna.Framework
             OnClientSizeChanged();
         }
 
-        public void CallTextInput(char c)
+        public void CallTextInput(char c, Keys key = Keys.None)
         {
-            OnTextInput(this, new TextInputEventArgs(c));
+            OnTextInput(this, new TextInputEventArgs(c, key));
         }
 
         protected internal override void SetSupportedOrientations(DisplayOrientation orientations)
