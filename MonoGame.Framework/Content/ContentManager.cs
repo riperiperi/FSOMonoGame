@@ -37,7 +37,6 @@ namespace Microsoft.Xna.Framework.Content
         {
             'w', // Windows (DirectX)
             'x', // Xbox360
-            'm', // WindowsPhone
             'i', // iOS
             'a', // Android
             'd', // DesktopGL
@@ -49,6 +48,7 @@ namespace Microsoft.Xna.Framework.Content
             'P', // PlayStation4
             'v', // PSVita
             'O', // XboxOne
+            'S', // Nintendo Switch
 
             // NOTE: There are additional idenfiers for consoles that 
             // are not defined in this repository.  Be sure to ask the
@@ -61,7 +61,6 @@ namespace Microsoft.Xna.Framework.Content
             'p', // PlayStationMobile
             'g', // Windows (OpenGL)
             'l', // Linux
-            'u', // Ouya
         };
 
 
@@ -189,6 +188,8 @@ namespace Microsoft.Xna.Framework.Content
                 {
                     Unload();
                 }
+
+                scratchBuffer = null;
 				disposed = true;
 			}
 		}
@@ -396,11 +397,7 @@ namespace Microsoft.Xna.Framework.Content
                 if (asset.Key == null)
                     ReloadAsset(asset.Key, Convert.ChangeType(asset.Value, asset.Value.GetType()));
 
-#if WINDOWS_STOREAPP || WINDOWS_UAP
-                var methodInfo = typeof(ContentManager).GetType().GetTypeInfo().GetDeclaredMethod("ReloadAsset");
-#else
-                var methodInfo = typeof(ContentManager).GetMethod("ReloadAsset", BindingFlags.NonPublic | BindingFlags.Instance);
-#endif
+                var methodInfo = ReflectionHelpers.GetMethodInfo(typeof(ContentManager), "ReloadAsset");
                 var genericMethod = methodInfo.MakeGenericMethod(asset.Value.GetType());
                 genericMethod.Invoke(this, new object[] { asset.Key, Convert.ChangeType(asset.Value, asset.Value.GetType()) }); 
             }

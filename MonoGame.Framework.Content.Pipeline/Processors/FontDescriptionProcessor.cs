@@ -21,12 +21,16 @@ namespace Microsoft.Xna.Framework.Content.Pipeline.Processors
     [ContentProcessor(DisplayName = "Sprite Font Description - MonoGame")]
     public class FontDescriptionProcessor : ContentProcessor<FontDescription, SpriteFontContent>
     {
+        [DefaultValue(true)]
+        public virtual bool PremultiplyAlpha { get; set; }
+
         [DefaultValue(typeof(TextureProcessorOutputFormat), "Compressed")]
         public virtual TextureProcessorOutputFormat TextureFormat { get; set; }
 
         public FontDescriptionProcessor()
         {
-            this.TextureFormat = TextureProcessorOutputFormat.Compressed;
+            PremultiplyAlpha = true;
+            TextureFormat = TextureProcessorOutputFormat.Compressed;
         }
 
         public override SpriteFontContent Process(FontDescription input,
@@ -86,7 +90,7 @@ namespace Microsoft.Xna.Framework.Content.Pipeline.Processors
             // Get the platform specific texture profile.
             var texProfile = TextureProfile.ForPlatform(context.TargetPlatform);
 
-			try {
+            {
 				if (!File.Exists(fontName)) {
 					throw new Exception(string.Format("Could not load {0}", fontName));
 				}
@@ -129,12 +133,50 @@ namespace Microsoft.Xna.Framework.Content.Pipeline.Processors
 
                 output.Texture.Faces[0].Add(face);            
 			}
-			catch(Exception ex) {
-				context.Logger.LogImportantMessage("{0}", ex.ToString());
-			}
+
+            if (PremultiplyAlpha)
+            {
+                var bmp = output.Texture.Faces[0][0];
+                var data = bmp.GetPixelData();
+                var idx = 0;
+                for (; idx < data.Length; )
+                {
+                    var r = data[idx];
+
+                    // Special case of simply copying the R component into the A, since R is the value of white alpha we want
+                    data[idx + 0] = r;
+                    data[idx + 1] = r;
+                    data[idx + 2] = r;
+                    data[idx + 3] = r;
+
+                    idx += 4;
+                }
+
+                bmp.SetPixelData(data);
+            }
+            else
+            {
+                var bmp = output.Texture.Faces[0][0];
+                var data = bmp.GetPixelData();
+                var idx = 0;
+                for (; idx < data.Length; )
+                {
+                    var r = data[idx];
+
+                    // Special case of simply moving the R component into the A and setting RGB to solid white, since R is the value of white alpha we want
+                    data[idx + 0] = 255;
+                    data[idx + 1] = 255;
+                    data[idx + 2] = 255;
+                    data[idx + 3] = r;
+
+                    idx += 4;
+                }
+
+                bmp.SetPixelData(data);
+            }
 
             // Perform the final texture conversion.
-            texProfile.ConvertTexture(context, output.Texture, TextureFormat, false, true);    
+            texProfile.ConvertTexture(context, output.Texture, TextureFormat, true);    
 
             return output;
         }
@@ -222,6 +264,9 @@ namespace Microsoft.Xna.Framework.Content.Pipeline.Processors
             s = s.Trim();
 
             var split = s.Split (':');
+            if (split.Length < 2)
+                return String.Empty;
+
             //check font family, fontconfig might return a fallback
             if (split [1].Contains (",")) { //this file defines multiple family names
                 var families = split [1].Split (',');

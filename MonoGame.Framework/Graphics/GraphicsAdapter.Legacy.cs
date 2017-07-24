@@ -77,6 +77,9 @@ namespace Microsoft.Xna.Framework.Graphics
         {
         }
 
+        string _description = string.Empty;
+        public string Description { get { return _description; } private set { _description = value; } }
+
         public DisplayMode CurrentDisplayMode
         {
             get
@@ -372,6 +375,24 @@ namespace Microsoft.Xna.Framework.Graphics
                 const float limit = 4.0f / 3.0f;
                 var aspect = CurrentDisplayMode.AspectRatio;
                 return aspect > limit;
+            }
+        }
+
+        public bool IsProfileSupported(GraphicsProfile graphicsProfile)
+        {
+            if(UseReferenceDevice)
+                return true;
+
+            switch(graphicsProfile)
+            {
+                case GraphicsProfile.Reach:
+                    return true;
+                case GraphicsProfile.HiDef:
+                    bool result = true;
+                    // TODO: check adapter capabilities...
+                    return result;
+                default:
+                    throw new InvalidOperationException();
             }
         }
 
