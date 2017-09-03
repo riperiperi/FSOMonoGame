@@ -927,7 +927,8 @@ namespace Microsoft.Xna.Framework.Graphics
             var vertexDeclaration = _vertexBuffers.Get(0).VertexBuffer.VertexDeclaration;
             var vertexOffset = (IntPtr)(vertexDeclaration.VertexStride * baseVertex);
 
-            vertexDeclaration.Apply(_vertexShader, vertexOffset);
+            var programHash = _vertexShader.HashKey | _pixelShader.HashKey;
+            vertexDeclaration.Apply(_vertexShader, vertexOffset, programHash);
 
             GL.DrawElements(target,
                                      indexElementCount,
@@ -952,7 +953,8 @@ namespace Microsoft.Xna.Framework.Graphics
 
             // Setup the vertex declaration to point at the VB data.
             vertexDeclaration.GraphicsDevice = this;
-            vertexDeclaration.Apply(_vertexShader, vbHandle.AddrOfPinnedObject());
+            var programHash = _vertexShader.HashKey | _pixelShader.HashKey;
+            vertexDeclaration.Apply(_vertexShader, vbHandle.AddrOfPinnedObject(), programHash);
 
             //Draw
             GL.DrawArrays(PrimitiveTypeGL(primitiveType),
@@ -967,8 +969,8 @@ namespace Microsoft.Xna.Framework.Graphics
         private void PlatformDrawPrimitives(PrimitiveType primitiveType, int vertexStart, int vertexCount)
         {
             ApplyState(true);
-
-            _vertexBuffers.Get(0).VertexBuffer.VertexDeclaration.Apply(_vertexShader, IntPtr.Zero);
+            var programHash = _vertexShader.HashKey | _pixelShader.HashKey;
+            _vertexBuffers.Get(0).VertexBuffer.VertexDeclaration.Apply(_vertexShader, IntPtr.Zero, programHash);
 
 			GL.DrawArrays(PrimitiveTypeGL(primitiveType),
 			              vertexStart,
@@ -995,7 +997,8 @@ namespace Microsoft.Xna.Framework.Graphics
 
             // Setup the vertex declaration to point at the VB data.
             vertexDeclaration.GraphicsDevice = this;
-            vertexDeclaration.Apply(_vertexShader, vertexAddr);
+            var programHash = _vertexShader.HashKey | _pixelShader.HashKey;
+            vertexDeclaration.Apply(_vertexShader, vertexAddr, programHash);
 
             //Draw
             GL.DrawElements(    PrimitiveTypeGL(primitiveType),
@@ -1028,7 +1031,8 @@ namespace Microsoft.Xna.Framework.Graphics
 
             // Setup the vertex declaration to point at the VB data.
             vertexDeclaration.GraphicsDevice = this;
-            vertexDeclaration.Apply(_vertexShader, vertexAddr);
+            var programHash = _vertexShader.HashKey | _pixelShader.HashKey;
+            vertexDeclaration.Apply(_vertexShader, vertexAddr, programHash);
 
             //Draw
             GL.DrawElements(    PrimitiveTypeGL(primitiveType),
