@@ -417,6 +417,7 @@ namespace MonoGame.Framework
             // typically will run all the tests on the same
             // process/thread.
 
+#if DEBUG
             var msg = new NativeMessage();
             do
             {
@@ -424,8 +425,9 @@ namespace MonoGame.Framework
                     break;
 
                 Thread.Sleep(100);
-            } 
-            while (PeekMessage(out msg, IntPtr.Zero, 0, 0, 1));
+            }
+            while (PeekMessage(out msg, IntPtr.Zero, 0, 1 << 5, 1));
+#endif
         }
 
         internal void UpdateWindows()
