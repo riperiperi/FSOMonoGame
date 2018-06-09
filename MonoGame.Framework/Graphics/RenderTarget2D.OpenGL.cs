@@ -56,5 +56,18 @@ namespace Microsoft.Xna.Framework.Graphics
 
             base.Dispose(disposing);
         }
+
+        public void InheritDepthStencil(RenderTarget2D from)
+        {
+            if (from == null)
+            {
+                //must use other method
+            }
+            else
+            {
+                ((IRenderTarget)this).GLDepthBuffer = ((IRenderTarget)from).GLDepthBuffer;
+                ((IRenderTarget)this).GLStencilBuffer = ((IRenderTarget)from).GLStencilBuffer;
+            }
+        }
     }
 }

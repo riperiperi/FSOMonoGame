@@ -199,5 +199,11 @@ namespace Microsoft.Xna.Framework.Graphics
 
             return desc;
         }
+
+        public void InheritDepthStencil(RenderTarget2D from)
+        {
+            if (from == null) _depthStencilView = GraphicsDevice._depthStencilView;
+            else _depthStencilView = from._depthStencilView;
+        }
     }
 }

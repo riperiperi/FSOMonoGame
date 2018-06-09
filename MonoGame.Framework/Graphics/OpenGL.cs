@@ -320,6 +320,7 @@ namespace MonoGame.OpenGL
         TextureBinding2D = 0x8069,
         MaxTextureMaxAnisotropyExt = 0x84FF,
         MaxSamples = 0x8D57,
+        NumExtensions = 0x821D
     }
 
     internal enum StringName
@@ -649,6 +650,11 @@ namespace MonoGame.OpenGL
         [MonoNativeFunctionWrapper]
         internal delegate IntPtr GetStringDelegate (StringName param);
         internal static GetStringDelegate GetStringInternal;
+
+        [System.Security.SuppressUnmanagedCodeSecurity()]
+        [MonoNativeFunctionWrapper]
+        internal delegate IntPtr GetStringiDelegate(StringName param, int i);
+        internal static GetStringiDelegate GetStringiInternal;
 
         [System.Security.SuppressUnmanagedCodeSecurity ()]
         [MonoNativeFunctionWrapper]
@@ -1215,6 +1221,7 @@ namespace MonoGame.OpenGL
             DisableVertexAttribArray = LoadEntryPoint<DisableVertexAttribArrayDelegate> ("glDisableVertexAttribArray");
             GetIntegerv = LoadEntryPoint<GetIntegerDelegate> ("glGetIntegerv");
             GetStringInternal = LoadEntryPoint<GetStringDelegate> ("glGetString");
+            GetStringiInternal = LoadEntryPoint<GetStringiDelegate>("glGetStringi");
             ClearDepth = LoadEntryPoint<ClearDepthDelegate> ("glClearDepth");
             if (ClearDepth == null)
                 ClearDepth = LoadEntryPoint<ClearDepthDelegate> ("glClearDepthf");
@@ -1352,7 +1359,9 @@ namespace MonoGame.OpenGL
             }
 #endif
             if (BoundApi == RenderApi.ES) {
-                InvalidateFramebuffer = LoadEntryPoint<InvalidateFramebufferDelegate> ("glDiscardFramebufferEXT");
+                InvalidateFramebuffer = LoadEntryPoint<InvalidateFramebufferDelegate>("glInvalidateFramebufer");
+                if (InvalidateFramebuffer == null)
+                    InvalidateFramebuffer = LoadEntryPoint<InvalidateFramebufferDelegate> ("glDiscardFramebufferEXT");
             }
 
             LoadExtensions ();
@@ -1369,14 +1378,28 @@ namespace MonoGame.OpenGL
             foreach (var ext in Extensions)
                 Android.Util.Log.Verbose("GL", "   " + ext);
 #endif 
+            foreach (var ext in Extensions)
+                Console.WriteLine("GL " + ext);
         }
 
         internal static void LoadExtensions()
         {
-            string extstring = GL.GetString(StringName.Extensions);
-            var error = GL.GetError();
-            if (!string.IsNullOrEmpty(extstring) && error == ErrorCode.NoError)
-                Extensions.AddRange(extstring.Split(' '));
+            if (GetStringiInternal != null)
+            {
+                int numExtensions = 0;
+                GL.GetInteger(GetPName.NumExtensions, out numExtensions);
+                for (int i = 0; i < numExtensions; ++i)
+                {
+                    Extensions.Add(GL.GetStringi(StringName.Extensions, i));
+                }
+            }
+            else
+            {
+                string extstring = GL.GetString(StringName.Extensions);
+                var error = GL.GetError();
+                if (!string.IsNullOrEmpty(extstring) && error == ErrorCode.NoError)
+                    Extensions.AddRange(extstring.Split(' '));
+            }
 
             LogExtensions();
             // now load Extensions :)
@@ -1408,6 +1431,8 @@ namespace MonoGame.OpenGL
                     GL.BlitFramebuffer = GL.LoadEntryPoint<GL.BlitFramebufferDelegate>("glBlitFramebufferNV");
                 }
             }
+
+            if (GL.BlitFramebuffer == null) GL.LoadEntryPoint<GL.BlitFramebufferDelegate>("glResolveMultisampleFramebufferAPPLE"); //ios doesnt have the extension, but does need you to do this
         }
 
         internal static void LoadFrameBufferObjectARBEntryPoints()
@@ -1487,6 +1512,11 @@ namespace MonoGame.OpenGL
         internal unsafe static string GetString (StringName name)
         {
             return Marshal.PtrToStringAnsi (GetStringInternal (name));
+        }
+
+        internal unsafe static string GetStringi(StringName name, int i)
+        {
+            return Marshal.PtrToStringAnsi(GetStringiInternal(name, i));
         }
 
         protected static IntPtr MarshalStringArrayToPtr (string[] strings)

@@ -656,7 +656,7 @@ namespace Microsoft.Xna.Framework.Graphics
 #if GLES
                     case DepthFormat.Depth24:
                         if (GraphicsCapabilities.SupportsDepth24)
-                            depthInternalFormat = RenderbufferStorage.DepthComponent24Oes;
+                            depthInternalFormat = RenderbufferStorage.DepthComponent24;
                         else if (GraphicsCapabilities.SupportsDepthNonLinear)
                             depthInternalFormat = (RenderbufferStorage)0x8E2C;
                         else
@@ -664,11 +664,11 @@ namespace Microsoft.Xna.Framework.Graphics
                         break;
                     case DepthFormat.Depth24Stencil8:
                         if (GraphicsCapabilities.SupportsPackedDepthStencil)
-                            depthInternalFormat = RenderbufferStorage.Depth24Stencil8Oes;
+                            depthInternalFormat = RenderbufferStorage.Depth24Stencil8;
                         else
                         {
                             if (GraphicsCapabilities.SupportsDepth24)
-                                depthInternalFormat = RenderbufferStorage.DepthComponent24Oes;
+                                depthInternalFormat = RenderbufferStorage.DepthComponent24;
                             else if (GraphicsCapabilities.SupportsDepthNonLinear)
                                 depthInternalFormat = (RenderbufferStorage)0x8E2C;
                             else

@@ -50,7 +50,7 @@ namespace MonoGame.OpenGL
     {
         public GraphicsContext ()
         {
-            Context = new EAGLContext (EAGLRenderingAPI.OpenGLES2);
+            Context = new EAGLContext (EAGLRenderingAPI.OpenGLES3);
         }
 
         public bool IsCurrent {

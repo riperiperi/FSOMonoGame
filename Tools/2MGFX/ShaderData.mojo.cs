@@ -171,7 +171,7 @@ namespace TwoMGFX
 
 			// Add the required precision specifiers for GLES.
 
-            var floatPrecision = dxshader.IsVertexShader ? "precision highp float;\r\n" : "precision mediump float;\r\n";
+            var floatPrecision = dxshader.IsVertexShader ? "precision highp float;\r\n" : "precision highp float;\r\n";
 
 			glslCode = "#ifdef GL_ES\r\n" +
                  floatPrecision +

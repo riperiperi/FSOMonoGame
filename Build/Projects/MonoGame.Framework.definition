@@ -298,7 +298,7 @@
     <Compile Include="Rectangle.cs" />
     <Compile Include="ReusableItemList.cs" />
     <Compile Include="TextInputEventArgs.cs">
-      <Platforms>Angle,Linux,MacOS,Windows,WindowsGL,WindowsUniversal</Platforms>
+      <Platforms>Android,Angle,iOS,Linux,MacOS,Windows,WindowsGL,WindowsUniversal</Platforms>
     </Compile>
     <Compile Include="Threading.cs">
       <Platforms>Android,Angle,iOS,Linux,MacOS,WindowsGL,tvOS</Platforms>
