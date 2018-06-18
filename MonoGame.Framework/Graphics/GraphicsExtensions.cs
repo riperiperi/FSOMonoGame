@@ -322,12 +322,10 @@ namespace Microsoft.Xna.Framework.Graphics
 			switch (function) {
 			case BlendFunction.Add:
 				return BlendEquationMode.FuncAdd;
-#if WINDOWS || DESKTOPGL || IOS
 			case BlendFunction.Max:
 				return BlendEquationMode.Max;
 			case BlendFunction.Min:
 				return BlendEquationMode.Min;
-#endif
 			case BlendFunction.ReverseSubtract:
 				return BlendEquationMode.FuncReverseSubtract;
 			case BlendFunction.Subtract:
