@@ -586,7 +586,7 @@ namespace Microsoft.Xna.Framework.Graphics
         {
             lock (_resourcesLock)
             {
-                _resources.RemoveWhere(wr => !wr.IsAlive);
+                _resources.Remove(resourceReference);
             }
         }
 
