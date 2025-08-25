@@ -55,12 +55,12 @@ namespace MonoGame.Utilities.Png
             var encodedPixelData = EncodePixelData(texture2D);
             var compressedPixelData = new MemoryStream();
 
+            ZlibStream deflateStream = null;
             try
             {
-                using (var deflateStream = new ZlibStream(new MemoryStream(encodedPixelData), CompressionMode.Compress))
-                {
-                    deflateStream.CopyTo(compressedPixelData);
-                }
+                deflateStream = new ZlibStream(compressedPixelData, CompressionMode.Compress);
+                deflateStream.Write(encodedPixelData, 0, encodedPixelData.Length);
+                deflateStream.Finish();
             }
             catch (Exception exception)
             {
@@ -71,6 +71,9 @@ namespace MonoGame.Utilities.Png
             dataChunk.Data = compressedPixelData.ToArray();
             var dataChunkBytes = dataChunk.Encode();
             outputStream.Write(dataChunkBytes, 0, dataChunkBytes.Length);
+
+            deflateStream.Dispose();
+            compressedPixelData.Dispose();
 
             // write end chunk
             var endChunk = new EndChunk();

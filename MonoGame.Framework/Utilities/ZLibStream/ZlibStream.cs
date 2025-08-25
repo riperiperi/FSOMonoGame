@@ -540,6 +540,16 @@ namespace MonoGame.Utilities
         }
 
         /// <summary>
+        /// Finish and flush.
+        /// TODO: shouldn't Flush just do this all the time?
+        /// </summary>
+        public void Finish()
+        {
+            _baseStream.Finish();
+            Flush();
+        }
+
+        /// <summary>
         /// Reading this property always throws a <see cref="NotSupportedException"/>.
         /// </summary>
         public override long Length
@@ -1622,7 +1632,7 @@ namespace MonoGame.Utilities
 
 
 
-        private void finish()
+        public void Finish()
         {
             if (_z == null) return;
 
